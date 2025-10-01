@@ -8,8 +8,16 @@ const __dirname = path.dirname(__filename);
 // Configure storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Save files to uploads/tournaments folder
-    cb(null, path.join(__dirname, "../../uploads/tournaments"));
+    // Determine destination based on field name
+    let uploadPath = "tournaments"; // default
+
+    if (file.fieldname === "teamLogo") {
+      uploadPath = "teams";
+    } else if (file.fieldname === "tournamentBanner") {
+      uploadPath = "tournaments";
+    }
+
+    cb(null, path.join(__dirname, `../../uploads/${uploadPath}`));
   },
   filename: function (req, file, cb) {
     // Create unique filename: timestamp-originalname

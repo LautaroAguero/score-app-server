@@ -29,6 +29,17 @@ app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
 app.use("/api/v1", routes);
 
 app.use((err, req, res, next) => {
+  // Handle Multer errors
+  if (err.code === "LIMIT_UNEXPECTED_FILE") {
+    console.error(`[MULTER ERROR] Unexpected field: ${err.field}`);
+    return res.status(400).json({
+      error: {
+        message: `Campo inesperado: ${err.field}. Campos permitidos: tournamentBanner, teamLogo`,
+        statusCode: 400,
+      },
+    });
+  }
+
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
 

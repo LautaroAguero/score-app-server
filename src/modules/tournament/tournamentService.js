@@ -9,6 +9,7 @@ export class TournamentService {
     return {
       id: tournament._id,
       name: tournament.name,
+      description: tournament.description,
       createdBy: tournament.createdBy,
       sportType: tournament.sportType,
       tournamentFormat: tournament.tournamentFormat,
@@ -66,6 +67,7 @@ export class TournamentService {
     return {
       id: tournament._id,
       name: tournament.name,
+      description: tournament.description,
       createdBy: tournament.createdBy,
       sportType: tournament.sportType,
       tournamentFormat: tournament.tournamentFormat,
