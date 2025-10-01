@@ -19,10 +19,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    role: {
+    organization: {
       type: String,
-      enum: ["organizer", "team"],
-      required: true,
+      required: false,
+      trim: true,
+    },
+    phoneNumber: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    experience: {
+      type: String,
+      required: false,
+      trim: true,
     },
   },
   {
