@@ -83,3 +83,15 @@ export const getMyTournaments = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// Get tournament standings
+export const getTournamentStandings = async (req, res) => {
+  try {
+    const standings = await tournamentService.getTournamentStandings(
+      req.params.id
+    );
+    res.status(200).json(standings);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};

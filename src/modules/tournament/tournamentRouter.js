@@ -6,6 +6,7 @@ import {
   updateTournament,
   deleteTournament,
   getMyTournaments,
+  getTournamentStandings,
 } from "./tournamentController.js";
 import { auth } from "../../middlewares/authentication.js";
 import { upload } from "../../config/upload.js";
@@ -18,8 +19,8 @@ router.get("/", getAllTournaments); // Public - get all tournaments
 // Protected routes (authentication required)
 router.post("/", auth, upload.single("tournamentBanner"), createTournament);
 router.get("/my-tournaments", auth, getMyTournaments);
-router.get("/:id", getTournamentById); // Public - get single tournamen
-router.get("/:id", auth, getTournamentById);
+router.get("/:id/standings", getTournamentStandings); // Public - get tournament standings
+router.get("/:id", getTournamentById); // Public - get single tournament
 router.put("/:id", auth, upload.single("tournamentBanner"), updateTournament);
 router.delete("/:id", auth, deleteTournament);
 
