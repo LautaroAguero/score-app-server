@@ -16,7 +16,7 @@ router.post("/", auth, createMatch);
 router.get("/", auth, getAllMatches);
 router.get("/tournament/:tournamentId", auth, getMatchesByTournament);
 router.get("/:id", auth, getMatchById);
-router.patch("/:id", auth, updateMatch);
+router.put("/:id", auth, updateMatch);
 router.delete("/:id", auth, deleteMatch);
 
 export default router;
