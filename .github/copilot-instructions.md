@@ -68,6 +68,7 @@ Every feature module follows this exact 4-file pattern:
 - `sportType`: `["soccer", "basketball", "volleyball", "tennis", "rugby"]`
 - `tournamentFormat`: `["league", "knockout", "hybrid"]`
 - `status`: `["upcoming", "inprogress", "finished"]` (default: `"upcoming"`)
+- `matchStatus`: `["scheduled", "playing", "completed"]` (default: `"scheduled"`)
 
 ### Default Values Pattern
 
@@ -134,4 +135,4 @@ No test framework currently configured. Manual testing via Postman/similar tools
 - **User**: Authentication (login/register), JWT tokens
 - **Tournament**: Full CRUD, user-owned, supports banner uploads, status tracking
 - **Team**: Full CRUD, tournament-scoped, supports logo uploads, optional grouping
-- **Match**: Placeholder (not yet implemented)
+- **Match**: Full CRUD, tournament-scoped, validates teams belong to same tournament, status tracking (scheduled/playing/completed), score tracking
