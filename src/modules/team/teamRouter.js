@@ -17,8 +17,8 @@ router.get("/", getAllTeams); // Public - get all teams or filter by tournament 
 
 // Protected routes (authentication required)
 router.post("/", auth, upload.single("teamLogo"), createTeam);
-router.get("/tournament/:tournamentId", auth, getTeamsByTournament); // Keep for backward compatibility
-router.get("/:id", auth, getTeamById);
+router.get("/tournament/:tournamentId", getTeamsByTournament);
+router.get("/:id", getTeamById);
 router.put("/:id", auth, upload.single("teamLogo"), updateTeam);
 router.delete("/:id", auth, deleteTeam);
 

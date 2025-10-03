@@ -18,6 +18,7 @@ router.get("/", getAllTournaments); // Public - get all tournaments
 // Protected routes (authentication required)
 router.post("/", auth, upload.single("tournamentBanner"), createTournament);
 router.get("/my-tournaments", auth, getMyTournaments);
+router.get("/:id", getTournamentById); // Public - get single tournamen
 router.get("/:id", auth, getTournamentById);
 router.put("/:id", auth, upload.single("tournamentBanner"), updateTournament);
 router.delete("/:id", auth, deleteTournament);

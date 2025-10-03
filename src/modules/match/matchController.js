@@ -14,9 +14,18 @@ export const createMatch = async (req, res) => {
   }
 };
 
-// Get all matches
+// Get all matches or filter by tournament
 export const getAllMatches = async (req, res) => {
   try {
+    // Check if tournament query parameter is provided
+    if (req.query.tournament) {
+      const matches = await matchService.getMatchesByTournament(
+        req.query.tournament
+      );
+      return res.status(200).json({ matches });
+    }
+
+    // Otherwise get all matches
     const matches = await matchService.getAllMatches();
     res.status(200).json({ matches });
   } catch (err) {
