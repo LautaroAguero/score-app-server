@@ -20,9 +20,18 @@ export const createTeam = async (req, res) => {
   }
 };
 
-// Get all teams
+// Get all teams or filter by tournament
 export const getAllTeams = async (req, res) => {
   try {
+    // Check if tournament query parameter is provided
+    if (req.query.tournament) {
+      const teams = await teamService.getTeamsByTournament(
+        req.query.tournament
+      );
+      return res.status(200).json({ teams });
+    }
+
+    // Otherwise get all teams
     const teams = await teamService.getAllTeams();
     res.status(200).json({ teams });
   } catch (err) {
