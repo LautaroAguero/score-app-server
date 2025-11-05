@@ -1,374 +1,623 @@
-# API Documentation
+# 📚 API Documentation - Score App Server
 
-Complete reference for all endpoints, methods, request/response formats.
+**Version:** 1.0  
+**Last Updated:** November 5, 2025  
+**Environment:** Production Ready ✅
 
-**Base URL:** `http://localhost:4000/api/v1/`
+---
+
+## 🚀 Quick Start for Clients
+
+Esta API permite gestionar torneos deportivos, equipos, partidos y jugadores. Todos los datos están organizados jerárquicamente:
+```
+Tournament (Torneo)
+├── Teams (Equipos)
+│   └── Players (Jugadores)
+└── Matches (Partidos)
+```
+
+---
+
+## 📍 Base URL
+
+```
+http://localhost:4000/api/v1/
+```
 
 ---
 
 ## 🔐 Authentication
 
-All protected endpoints require:
+Para acceder a endpoints protegidos, necesitas un JWT token:
 
 ```
-Authorization: Bearer <JWT_TOKEN>
+Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
-**Token obtained from:** `POST /user/login`  
-**Token expires:** 24 hours  
-**Token location in code:** Stored in `req.user` after middleware processes it
+### Cómo obtener token:
+1. **Registrarse:** `POST /user/register`
+2. **Login:** `POST /user/login`
+3. Usa el token en todas las requests protegidas
+4. Token expira en **24 horas**
 
 ---
 
-## 👤 User Endpoints
+## 👤 User Module
 
-### Register User
+### POST `/user/register`
+Crear nueva cuenta de usuario.
 
-- **Method:** `POST /user/register`
-- **Auth:** ❌ No
-- **Body:**
-  ```json
-  {
-    "name": "string (required)",
-    "email": "string (required, unique)",
-    "password": "string (required, min 6 chars)",
-    "organization": "string (optional)",
-    "phoneNumber": "string (optional)",
-    "experience": "string (optional)"
-  }
-  ```
-- **Response:** `201 Created`
-  ```json
-  {
-    "user": {
-      "id": "string",
-      "name": "string",
-      "email": "string",
-      "organization": "string",
-      "phoneNumber": "string",
-      "experience": "string",
-      "createdAt": "ISO8601",
-      "updatedAt": "ISO8601"
-    },
-    "token": "jwt_string"
-  }
-  ```
+**Request:**
+```json
+{
+  "name": "Juan Pérez",
+  "email": "juan@example.com",
+  "password": "securepass123",
+  "organization": "FC Argentina",
+  "phoneNumber": "+5491234567890",
+  "experience": "10 años en deportes"
+}
+```
 
-### Login User
+**Response:** `201 Created`
+```json
+{
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "name": "Juan Pérez",
+    "email": "juan@example.com"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
 
-- **Method:** `POST /user/login`
-- **Auth:** ❌ No
-- **Body:**
-  ```json
-  {
-    "email": "string",
-    "password": "string"
-  }
-  ```
-- **Response:** `200 OK`
-  ```json
-  {
-    "user": {
-      /* user object */
-    },
-    "token": "jwt_string"
-  }
-  ```
+### POST `/user/login`
+Autenticarse y obtener token JWT.
 
----
+**Request:**
+```json
+{
+  "email": "juan@example.com",
+  "password": "securepass123"
+}
+```
 
-## 🏆 Tournament Endpoints
+**Response:** `200 OK` (mismo formato que register)
 
-### Get All Tournaments
+### POST `/user/verify`
+Verificar que el token actual es válido.
 
-- **Method:** `GET /tournaments`
-- **Auth:** ❌ No
-- **Query:** None
-- **Response:** `200 OK`
-  ```json
-  {
-    "tournaments": [
-      {
-        "id": "string",
-        "name": "string",
-        "description": "string",
-        "createdBy": "string (User ID)",
-        "sportType": "enum: soccer|basketball|volleyball|tennis|rugby",
-        "tournamentFormat": "enum: league|knockout|hybrid",
-        "startDate": "ISO8601",
-        "endDate": "ISO8601",
-        "location": "string",
-        "numberOfParticipants": "number",
-        "pointsForWin": 3,
-        "pointsForDraw": 1,
-        "pointsForLoss": 0,
-        "status": "enum: upcoming|inprogress|finished",
-        "tournamentBanner": "string (image path or null)",
-        "createdAt": "ISO8601"
-      }
-    ]
-  }
-  ```
-
-### Get Tournament by ID
-
-- **Method:** `GET /tournaments/:id`
-- **Auth:** ❌ No
-- **Response:** `200 OK` (same tournament object as above)
-- **Error:** `404 Not Found` if tournament doesn't exist
-
-### Get My Tournaments
-
-- **Method:** `GET /tournaments/my-tournaments`
-- **Auth:** ✅ Yes (Bearer token required)
-- **Response:** `200 OK` (array of tournament objects created by user)
-
-### Create Tournament
-
-- **Method:** `POST /tournaments`
-- **Auth:** ✅ Yes
-- **Body:** (multipart/form-data if uploading image)
-  ```json
-  {
-    "name": "string (required)",
-    "description": "string (optional)",
-    "sportType": "enum (required)",
-    "tournamentFormat": "enum (required)",
-    "startDate": "ISO8601 (optional)",
-    "endDate": "ISO8601 (optional)",
-    "location": "string (optional)",
-    "numberOfParticipants": "number (optional)",
-    "pointsForWin": "number (default: 3)",
-    "pointsForDraw": "number (default: 1)",
-    "pointsForLoss": "number (default: 0)"
-  }
-  ```
-- **File field:** `tournamentBanner` (optional, saved to `/uploads/tournaments/`)
-- **Response:** `201 Created`
-
-### Update Tournament
-
-- **Method:** `PUT /tournaments/:id`
-- **Auth:** ✅ Yes (must be creator)
-- **Body:** Same as Create (partial update allowed)
-- **Response:** `200 OK`
-
-### Delete Tournament
-
-- **Method:** `DELETE /tournaments/:id`
-- **Auth:** ✅ Yes (must be creator)
-- **Response:** `200 OK`
-  ```json
-  { "message": "Torneo eliminado exitosamente" }
-  ```
-
-### Get Tournament Standings
-
-- **Method:** `GET /tournaments/:id/standings`
-- **Auth:** ❌ No
-- **Response:** `200 OK`
-  ```json
-  {
-    "tournament": {
-      "id": "string",
-      "name": "string",
-      "sportType": "string",
-      "pointsForWin": 3,
-      "pointsForDraw": 1,
-      "pointsForLoss": 0
-    },
-    "standings": [
-      {
-        "position": 1,
-        "team": {
-          "id": "string",
-          "name": "string",
-          "teamLogo": "string (image path or null)",
-          "group": "string (optional)"
-        },
-        "played": 10,
-        "won": 7,
-        "drawn": 2,
-        "lost": 1,
-        "goalsFor": 21,
-        "goalsAgainst": 8,
-        "goalDifference": 13,
-        "points": 23
-      }
-    ]
-  }
-  ```
+**Auth:** ✅ Requerido  
+**Response:** `200 OK`
+```json
+{
+  "valid": true,
+  "user": { /* datos usuario */ }
+}
+```
 
 ---
 
-## 🏅 Team Endpoints
+## 🏆 Tournament Module
 
-### Get All Teams (filtered by tournament)
+### GET `/tournaments`
+Listar todos los torneos (público).
 
-- **Method:** `GET /teams?tournament=:tournamentId`
-- **Auth:** ❌ No
-- **Query:** `tournament` (optional - filters teams by tournament ID)
-- **Response:** `200 OK`
-  ```json
-  {
-    "teams": [
-      {
-        "id": "string",
-        "name": "string",
-        "tournament": "string (Tournament ID)",
-        "group": "string (optional)",
-        "teamLogo": "string (image path or null)",
-        "createdAt": "ISO8601"
-      }
-    ]
-  }
-  ```
+**Auth:** ❌ No requerido  
+**Response:** `200 OK`
+```json
+{
+  "tournaments": [
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "name": "Copa América 2025",
+      "sportType": "soccer",
+      "tournamentFormat": "league",
+      "status": "upcoming",
+      "numberOfParticipants": 8,
+      "createdAt": "2025-11-05T10:00:00Z"
+    }
+  ]
+}
+```
 
-### Get Team by ID
+### GET `/tournaments/:id`
+Obtener detalles de un torneo.
 
-- **Method:** `GET /teams/:id`
-- **Auth:** ❌ No
-- **Response:** `200 OK` (single team object)
+**Auth:** ❌ No  
+**Response:** `200 OK` (torneo detallado)
 
-### Create Team
+### GET `/tournaments/:id/standings`
+**NUEVO** - Obtener tabla de posiciones (liga).
 
-- **Method:** `POST /teams`
-- **Auth:** ✅ Yes
-- **Body:** (multipart/form-data)
-  ```json
-  {
-    "name": "string (required)",
-    "tournament": "string (required, Tournament ID)",
-    "group": "string (optional)"
-  }
-  ```
-- **File field:** `teamLogo` (optional, saved to `/uploads/teams/`)
-- **Response:** `201 Created`
+**Auth:** ❌ No  
+**Response:** `200 OK`
+```json
+{
+  "standings": [
+    {
+      "position": 1,
+      "teamName": "FC Real",
+      "played": 10,
+      "won": 8,
+      "drawn": 1,
+      "lost": 1,
+      "goalsFor": 28,
+      "goalsAgainst": 8,
+      "points": 25
+    }
+  ]
+}
+```
 
-### Update Team
+### GET `/tournaments/my-tournaments`
+Obtener mis torneos (los que creé).
 
-- **Method:** `PUT /teams/:id`
-- **Auth:** ✅ Yes
-- **Body:** Same as Create
-- **Response:** `200 OK`
+**Auth:** ✅ Requerido  
+**Response:** `200 OK` (array de torneos)
 
-### Delete Team
+### POST `/tournaments`
+Crear nuevo torneo.
 
-- **Method:** `DELETE /teams/:id`
-- **Auth:** ✅ Yes
-- **Response:** `200 OK`
-  ```json
-  { "message": "Equipo eliminado exitosamente" }
-  ```
+**Auth:** ✅ Requerido  
+**Request:**
+```json
+{
+  "name": "Copa América 2025",
+  "description": "Torneo internacional",
+  "sportType": "soccer",
+  "tournamentFormat": "league",
+  "numberOfParticipants": 8,
+  "pointsForWin": 3,
+  "pointsForDraw": 1,
+  "pointsForLoss": 0
+}
+```
 
----
+**File Upload (opcional):**
+- Field: `tournamentBanner`
+- Formats: jpeg, jpg, png, gif, webp
+- Max: 5MB
 
-## 🎯 Match Endpoints
+**Response:** `201 Created`
 
-### Get All Matches (filtered by tournament)
+### PUT `/tournaments/:id`
+Actualizar torneo (solo creador).
 
-- **Method:** `GET /matches?tournament=:tournamentId`
-- **Auth:** ❌ No
-- **Query:** `tournament` (optional - filters matches by tournament ID)
-- **Response:** `200 OK`
-  ```json
-  {
-    "matches": [
-      {
-        "id": "string",
-        "tournament": "string (Tournament ID)",
-        "homeTeam": { "id": "string", "name": "string" },
-        "awayTeam": { "id": "string", "name": "string" },
-        "matchDate": "ISO8601 (optional)",
-        "matchTime": "string (optional, HH:mm format)",
-        "venue": "string (optional)",
-        "stage": "string (optional)",
-        "homeTeamScore": 0,
-        "awayTeamScore": 0,
-        "status": "enum: scheduled|playing|completed",
-        "createdAt": "ISO8601"
-      }
-    ]
-  }
-  ```
+**Auth:** ✅ Requerido  
+**Body:** Igual a POST, todos los campos opcionales  
+**Response:** `200 OK`
 
-### Get Match by ID
+**Error:**
+- `403 Forbidden` - No eres el creador
 
-- **Method:** `GET /matches/:id`
-- **Auth:** ❌ No
-- **Response:** `200 OK` (single match object)
+### DELETE `/tournaments/:id`
+Eliminar torneo (solo creador).
 
-### Create Match
-
-- **Method:** `POST /matches`
-- **Auth:** ✅ Yes
-- **Body:**
-  ```json
-  {
-    "tournament": "string (required, Tournament ID)",
-    "homeTeam": "string (required, Team ID)",
-    "awayTeam": "string (required, Team ID)",
-    "matchDate": "ISO8601 (optional)",
-    "matchTime": "string (optional)",
-    "venue": "string (optional)",
-    "stage": "string (optional)"
-  }
-  ```
-- **Response:** `201 Created`
-
-### Update Match
-
-- **Method:** `PUT /matches/:id`
-- **Auth:** ✅ Yes
-- **Body:**
-  ```json
-  {
-    "matchDate": "ISO8601 (optional)",
-    "matchTime": "string (optional)",
-    "venue": "string (optional)",
-    "stage": "string (optional)",
-    "homeTeamScore": "number (optional)",
-    "awayTeamScore": "number (optional)",
-    "status": "enum: scheduled|playing|completed (optional)"
-  }
-  ```
-- **Response:** `200 OK`
-
-### Delete Match
-
-- **Method:** `DELETE /matches/:id`
-- **Auth:** ✅ Yes
-- **Response:** `200 OK`
-  ```json
-  { "message": "Partido eliminado exitosamente" }
-  ```
+**Auth:** ✅ Requerido  
+**Response:** `200 OK`
+```json
+{
+  "message": "Torneo eliminado exitosamente"
+}
+```
 
 ---
 
-## 📊 Common Status Codes
+## 👥 Team Module
 
-| Code | Meaning                              |
-| ---- | ------------------------------------ |
-| 200  | Success (GET, PUT)                   |
-| 201  | Created (POST)                       |
-| 400  | Bad Request (validation error)       |
-| 401  | Unauthorized (missing/invalid token) |
-| 404  | Not Found                            |
-| 500  | Server Error                         |
+### GET `/teams`
+Listar todos los equipos (con filtro opcional).
+
+**Auth:** ❌ No  
+**Query:** `?team=TOURNAMENT_ID` (opcional)  
+**Response:** `200 OK`
+```json
+{
+  "teams": [
+    {
+      "id": "507f1f77bcf86cd799439014",
+      "name": "FC Real",
+      "tournament": "507f1f77bcf86cd799439011",
+      "group": "A"
+    }
+  ]
+}
+```
+
+### GET `/teams/:id`
+Obtener detalles de un equipo.
+
+**Auth:** ❌ No  
+**Response:** `200 OK`
+
+### POST `/teams`
+Crear nuevo equipo (solo creador del torneo).
+
+**Auth:** ✅ Requerido  
+**Request:**
+```json
+{
+  "name": "FC Real",
+  "tournament": "507f1f77bcf86cd799439011",
+  "group": "A"
+}
+```
+
+**File Upload (opcional):** `teamLogo` (5MB max)  
+**Response:** `201 Created`
+
+### PUT `/teams/:id`
+Actualizar equipo (solo creador del torneo).
+
+**Auth:** ✅ Requerido  
+**Response:** `200 OK`
+
+**Error:**
+- `403 Forbidden` - No eres el creador del torneo
+
+### DELETE `/teams/:id`
+Eliminar equipo (solo creador del torneo).
+
+**Auth:** ✅ Requerido  
+**Response:** `200 OK`
 
 ---
 
-## 🎪 File Upload Details
+## ⚽ Match Module
 
-**Allowed file types:** `jpeg, jpg, png, gif, webp`  
-**Max file size:** `5MB`  
-**Field names:**
+### GET `/matches`
+Listar todos los partidos (con filtro opcional).
 
-- `tournamentBanner` → saved to `/uploads/tournaments/`
-- `teamLogo` → saved to `/uploads/teams/`
+**Auth:** ❌ No  
+**Query:** `?tournament=TOURNAMENT_ID` (opcional)  
+**Response:** `200 OK`
+```json
+{
+  "matches": [
+    {
+      "id": "507f1f77bcf86cd799439015",
+      "homeTeam": { "id": "...", "name": "FC Real" },
+      "awayTeam": { "id": "...", "name": "FC United" },
+      "homeTeamScore": 2,
+      "awayTeamScore": 1,
+      "status": "completed",
+      "matchDate": "2025-11-05T19:00:00Z"
+    }
+  ]
+}
+```
 
-**Accessing files:** `http://localhost:4000/uploads/[folder]/[filename]`
+### GET `/matches/:id`
+Obtener detalles de un partido.
+
+**Auth:** ❌ No  
+**Response:** `200 OK`
+
+### POST `/matches`
+Crear nuevo partido (solo creador del torneo).
+
+**Auth:** ✅ Requerido  
+**Request:**
+```json
+{
+  "tournament": "507f1f77bcf86cd799439011",
+  "homeTeam": "507f1f77bcf86cd799439014",
+  "awayTeam": "507f1f77bcf86cd799439016",
+  "matchDate": "2025-11-05T19:00:00Z",
+  "matchTime": "19:00",
+  "status": "scheduled"
+}
+```
+
+**Response:** `201 Created`
+
+### PUT `/matches/:id`
+Actualizar partido (actualizar score, estado, etc).
+
+**Auth:** ✅ Requerido  
+**Request:** Todos los campos opcionales
+```json
+{
+  "homeTeamScore": 2,
+  "awayTeamScore": 1,
+  "status": "completed"
+}
+```
+
+**Response:** `200 OK`
+
+**Error:**
+- `403 Forbidden` - No eres el creador del torneo
+
+### DELETE `/matches/:id`
+Eliminar partido.
+
+**Auth:** ✅ Requerido  
+**Response:** `200 OK`
 
 ---
 
-Last updated: November 4, 2025
+## 🎮 Player Module (NUEVO)
+
+**¿Qué es?** Gestiona los jugadores dentro de cada equipo.
+
+### GET `/players`
+Listar todos los jugadores (con filtro opcional).
+
+**Auth:** ❌ No  
+**Query:** `?team=TEAM_ID` (opcional)  
+**Response:** `200 OK`
+```json
+{
+  "players": [
+    {
+      "id": "507f1f77bcf86cd799439017",
+      "name": "Lionel Messi",
+      "number": 10,
+      "position": "Forward",
+      "team": "507f1f77bcf86cd799439014",
+      "height": 170,
+      "weight": 72,
+      "nationality": "Argentina"
+    }
+  ]
+}
+```
+
+### GET `/players/:id`
+Obtener detalles de un jugador.
+
+**Auth:** ❌ No  
+**Response:** `200 OK`
+
+### POST `/players`
+Crear nuevo jugador (solo creador del torneo).
+
+**Auth:** ✅ Requerido  
+**Request:**
+```json
+{
+  "name": "Lionel Messi",
+  "number": 10,
+  "position": "Forward",
+  "team": "507f1f77bcf86cd799439014",
+  "height": 170,
+  "weight": 72,
+  "dateOfBirth": "1987-06-24",
+  "nationality": "Argentina"
+}
+```
+
+**Response:** `201 Created`
+
+### PUT `/players/:id`
+Actualizar jugador (solo creador del torneo).
+
+**Auth:** ✅ Requerido  
+**Request:** Todos los campos opcionales  
+**Response:** `200 OK`
+
+**Error:**
+- `403 Forbidden` - No eres el creador del torneo
+
+### DELETE `/players/:id`
+Eliminar jugador.
+
+**Auth:** ✅ Requerido  
+**Response:** `200 OK`
+
+---
+
+## 📊 HTTP Status Codes
+
+| Código | Significado | Ejemplo |
+|--------|-------------|---------|
+| **200** | Éxito (GET, PUT) | Datos retornados exitosamente |
+| **201** | Creado (POST) | Recurso creado exitosamente |
+| **400** | Bad Request | Error de validación |
+| **401** | Unauthorized | Token faltante o inválido |
+| **403** | Forbidden | Acceso denegado (no eres el propietario) |
+| **404** | Not Found | Recurso no existe |
+| **500** | Server Error | Error interno del servidor |
+
+---
+
+## ✨ Reglas de Validación
+
+### User
+- `name`: 2-100 caracteres
+- `email`: Email válido, único
+- `password`: Mínimo 6 caracteres
+- `organization`: Máximo 100 caracteres
+- `phoneNumber`: Formato internacional (opcional)
+
+### Tournament
+- `name`: 3-100 caracteres
+- `sportType`: soccer, basketball, volleyball, tennis, rugby
+- `tournamentFormat`: league, knockout, hybrid
+- `numberOfParticipants`: 2-1000
+
+### Team
+- `name`: 2-100 caracteres
+- `tournament`: ID válido de MongoDB
+- `group`: Máximo 50 caracteres
+
+### Match
+- `tournament`: ID válido
+- `homeTeam`: ID válido, debe estar en el torneo
+- `awayTeam`: ID válido, diferente del homeTeam
+- `homeTeamScore`: Mínimo 0
+- `awayTeamScore`: Mínimo 0
+- `status`: scheduled, playing, completed
+- `matchTime`: Formato HH:MM
+
+### Player
+- `name`: 2-100 caracteres
+- `number`: 0-99
+- `position`: Máximo 50 caracteres
+- `team`: ID válido
+- `height`: 50-300 cm
+- `weight`: 20-200 kg
+- `dateOfBirth`: Debe ser en el pasado
+
+---
+
+## 🔒 Reglas de Autorización
+
+| Recurso | Crear | Actualizar | Eliminar |
+|---------|-------|-----------|----------|
+| **Tournament** | ✅ Cualquier usuario autenticado | ✅ Solo creador | ✅ Solo creador |
+| **Team** | ✅ Creador del torneo | ✅ Creador del torneo | ✅ Creador del torneo |
+| **Match** | ✅ Creador del torneo | ✅ Creador del torneo | ✅ Creador del torneo |
+| **Player** | ✅ Creador del torneo | ✅ Creador del torneo | ✅ Creador del torneo |
+
+**Error de autorización:**
+```json
+{
+  "message": "No tienes permiso para realizar esta acción"
+}
+```
+Status Code: `403 Forbidden`
+
+---
+
+## 📤 File Upload
+
+### Campos y Rutas
+
+| Campo | Endpoint | Max | Formatos | Ruta de Acceso |
+|-------|----------|-----|----------|---|
+| `tournamentBanner` | POST/PUT `/tournaments` | 5MB | jpeg, jpg, png, gif, webp | `/uploads/tournaments/` |
+| `teamLogo` | POST/PUT `/teams` | 5MB | jpeg, jpg, png, gif, webp | `/uploads/teams/` |
+
+### Accediendo a archivos
+
+```
+http://localhost:4000/uploads/tournaments/nombre-imagen.jpg
+http://localhost:4000/uploads/teams/logo-equipo.png
+```
+
+### Ejemplo de upload con cURL
+
+```bash
+curl -X POST http://localhost:4000/api/v1/tournaments \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "name=Copa América" \
+  -F "sportType=soccer" \
+  -F "tournamentFormat=league" \
+  -F "numberOfParticipants=8" \
+  -F "tournamentBanner=@path/to/image.jpg"
+```
+
+---
+
+## 🧪 Ejemplos de Uso
+
+### 1. Registrarse
+
+```bash
+curl -X POST http://localhost:4000/api/v1/user/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Juan Pérez",
+    "email": "juan@example.com",
+    "password": "securepass123"
+  }'
+```
+
+### 2. Login
+
+```bash
+curl -X POST http://localhost:4000/api/v1/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "juan@example.com",
+    "password": "securepass123"
+  }'
+```
+
+Guarda el token de la respuesta.
+
+### 3. Crear Torneo
+
+```bash
+curl -X POST http://localhost:4000/api/v1/tournaments \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Copa América 2025",
+    "sportType": "soccer",
+    "tournamentFormat": "league",
+    "numberOfParticipants": 8
+  }'
+```
+
+### 4. Crear Equipo
+
+```bash
+curl -X POST http://localhost:4000/api/v1/teams \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "FC Real",
+    "tournament": "TOURNAMENT_ID"
+  }'
+```
+
+### 5. Crear Jugador
+
+```bash
+curl -X POST http://localhost:4000/api/v1/players \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Lionel Messi",
+    "number": 10,
+    "position": "Forward",
+    "team": "TEAM_ID"
+  }'
+```
+
+### 6. Obtener Standings
+
+```bash
+curl -X GET http://localhost:4000/api/v1/tournaments/TOURNAMENT_ID/standings
+```
+
+---
+
+## ❓ ¿Puedo pasarle esto al cliente?
+
+**SÍ, DEFINITIVAMENTE.** Este documento está diseñado para ser:
+
+✅ **Cliente-friendly:** Explicaciones en español, estructura clara  
+✅ **Completo:** Todos los endpoints con ejemplos  
+✅ **Práctico:** Ejemplos de cURL, JSON, códigos de error  
+✅ **Visual:** Tablas, iconos, secciones claras  
+✅ **Actualizado:** Incluye Player module y validación Joi (Nov 5, 2025)  
+✅ **Funcional:** El cliente puede directamente copiar/pegar ejemplos  
+
+### Si lo pasas al cliente, incluye:
+
+1. **Este documento** (01-API-DOCUMENTATION.md)
+2. **Las credenciales de acceso** (base URL, posiblemente token de prueba)
+3. **Un postman collection** (si disponible - para testing interactivo)
+4. **Support contact** (quién contactar si hay problemas)
+
+---
+
+## 🚀 Cambios Recientes (Nov 5, 2025)
+
+✅ **Nuevo:** Player Module (CRUD completo)  
+✅ **Nuevo:** Validación Joi en todos los endpoints  
+✅ **Nuevo:** Ownership verification (403 Forbidden)  
+✅ **Nuevo:** MongoDB indexes (performance)  
+✅ **Mejorado:** Documentación cliente-friendly  
+✅ **Arreglado:** Removed debug logs (memory leak fix)  
+
+---
+
+**Última actualización:** November 5, 2025  
+**API Version:** 1.0  
+**Status:** ✅ Production Ready
