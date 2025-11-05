@@ -56,46 +56,64 @@ export class TournamentService {
   }
 
   // Update a tournament
-  async updateTournament(id, tournamentData) {
-    const tournament = await Tournament.findByIdAndUpdate(id, tournamentData, {
-      new: true,
-      runValidators: true,
-    });
+  async updateTournament(id, tournamentData, userId) {
+    const tournament = await Tournament.findById(id);
 
     if (!tournament) {
       throw new Error("Torneo no encontrado");
     }
 
+    // Verify ownership
+    if (tournament.createdBy.toString() !== userId) {
+      throw new Error("No tienes permiso para realizar esta acción");
+    }
+
+    const updatedTournament = await Tournament.findByIdAndUpdate(
+      id,
+      tournamentData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
     return {
-      id: tournament._id,
-      name: tournament.name,
-      description: tournament.description,
-      createdBy: tournament.createdBy,
-      sportType: tournament.sportType,
-      tournamentFormat: tournament.tournamentFormat,
-      startDate: tournament.startDate,
-      endDate: tournament.endDate,
-      location: tournament.location,
-      tournamentDetails: tournament.tournamentDetails,
-      numberOfParticipants: tournament.numberOfParticipants,
-      prizes: tournament.prizes,
-      tournamentBanner: tournament.tournamentBanner,
-      rules: tournament.rules,
-      pointsForWin: tournament.pointsForWin,
-      pointsForDraw: tournament.pointsForDraw,
-      pointsForLoss: tournament.pointsForLoss,
-      status: tournament.status,
-      createdAt: tournament.createdAt,
-      updatedAt: tournament.updatedAt,
+      id: updatedTournament._id,
+      name: updatedTournament.name,
+      description: updatedTournament.description,
+      createdBy: updatedTournament.createdBy,
+      sportType: updatedTournament.sportType,
+      tournamentFormat: updatedTournament.tournamentFormat,
+      startDate: updatedTournament.startDate,
+      endDate: updatedTournament.endDate,
+      location: updatedTournament.location,
+      tournamentDetails: updatedTournament.tournamentDetails,
+      numberOfParticipants: updatedTournament.numberOfParticipants,
+      prizes: updatedTournament.prizes,
+      tournamentBanner: updatedTournament.tournamentBanner,
+      rules: updatedTournament.rules,
+      pointsForWin: updatedTournament.pointsForWin,
+      pointsForDraw: updatedTournament.pointsForDraw,
+      pointsForLoss: updatedTournament.pointsForLoss,
+      status: updatedTournament.status,
+      createdAt: updatedTournament.createdAt,
+      updatedAt: updatedTournament.updatedAt,
     };
   }
 
   // Delete a tournament
-  async deleteTournament(id) {
-    const tournament = await Tournament.findByIdAndDelete(id);
+  async deleteTournament(id, userId) {
+    const tournament = await Tournament.findById(id);
     if (!tournament) {
       throw new Error("Torneo no encontrado");
     }
+
+    // Verify ownership
+    if (tournament.createdBy.toString() !== userId) {
+      throw new Error("No tienes permiso para realizar esta acción");
+    }
+
+    await Tournament.findByIdAndDelete(id);
     return { message: "Torneo eliminado exitosamente" };
   }
 

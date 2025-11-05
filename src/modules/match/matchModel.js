@@ -59,4 +59,12 @@ const matchSchema = new mongoose.Schema(
   }
 );
 
+// Indexes for query optimization
+// Index: Fast lookup of matches by tournament (used in getMatchesByTournament)
+matchSchema.index({ tournament: 1 });
+// Index: Fast lookup of matches by status (used for standings, active matches)
+matchSchema.index({ status: 1 });
+// Compound Index: Fast lookup for tournament-specific match filters with status
+matchSchema.index({ tournament: 1, status: 1 });
+
 export default mongoose.model("Match", matchSchema);

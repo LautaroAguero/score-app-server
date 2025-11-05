@@ -56,33 +56,48 @@ export class TeamService {
   }
 
   // Update a team
-  async updateTeam(id, teamData) {
-    const team = await Team.findByIdAndUpdate(id, teamData, {
+  async updateTeam(id, teamData, userId) {
+    const team = await Team.findById(id).populate("tournament");
+
+    if (!team) {
+      throw new Error("Equipo no encontrado");
+    }
+
+    // Verify that the user is the creator of the tournament
+    if (team.tournament.createdBy.toString() !== userId) {
+      throw new Error("No tienes permiso para realizar esta acción");
+    }
+
+    const updatedTeam = await Team.findByIdAndUpdate(id, teamData, {
       new: true,
       runValidators: true,
     }).populate("tournament", "name sportType");
 
-    if (!team) {
-      throw new Error("Equipo no encontrado");
-    }
-
     return {
-      id: team._id,
-      name: team.name,
-      tournament: team.tournament,
-      group: team.group,
-      teamLogo: team.teamLogo,
-      createdAt: team.createdAt,
-      updatedAt: team.updatedAt,
+      id: updatedTeam._id,
+      name: updatedTeam.name,
+      tournament: updatedTeam.tournament,
+      group: updatedTeam.group,
+      teamLogo: updatedTeam.teamLogo,
+      createdAt: updatedTeam.createdAt,
+      updatedAt: updatedTeam.updatedAt,
     };
   }
 
   // Delete a team
-  async deleteTeam(id) {
-    const team = await Team.findByIdAndDelete(id);
+  async deleteTeam(id, userId) {
+    const team = await Team.findById(id).populate("tournament");
+
     if (!team) {
       throw new Error("Equipo no encontrado");
     }
+
+    // Verify that the user is the creator of the tournament
+    if (team.tournament.createdBy.toString() !== userId) {
+      throw new Error("No tienes permiso para realizar esta acción");
+    }
+
+    await Team.findByIdAndDelete(id);
     return { message: "Equipo eliminado exitosamente" };
   }
 }

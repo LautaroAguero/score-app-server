@@ -97,15 +97,21 @@ export class MatchService {
   }
 
   // Update a match
-  async updateMatch(id, matchData) {
+  async updateMatch(id, matchData, userId) {
+    // Get the match and populate tournament to check ownership
+    const match = await Match.findById(id).populate("tournament");
+    if (!match) {
+      throw new Error("Partido no encontrado");
+    }
+
+    // Verify ownership: user must be the tournament creator
+    if (match.tournament.createdBy.toString() !== userId) {
+      throw new Error("No tienes permiso para realizar esta acción");
+    }
+
     // If updating teams, validate they exist and belong to the same tournament
     if (matchData.homeTeam || matchData.awayTeam) {
-      const match = await Match.findById(id);
-      if (!match) {
-        throw new Error("Partido no encontrado");
-      }
-
-      const tournament = matchData.tournament || match.tournament;
+      const tournament = matchData.tournament || match.tournament._id;
 
       if (matchData.homeTeam) {
         const homeTeam = await Team.findById(matchData.homeTeam);
@@ -135,7 +141,7 @@ export class MatchService {
       }
     }
 
-    const match = await Match.findByIdAndUpdate(id, matchData, {
+    const updatedMatch = await Match.findByIdAndUpdate(id, matchData, {
       new: true,
       runValidators: true,
     })
@@ -143,33 +149,36 @@ export class MatchService {
       .populate("homeTeam", "name teamLogo")
       .populate("awayTeam", "name teamLogo");
 
-    if (!match) {
-      throw new Error("Partido no encontrado");
-    }
-
     return {
-      id: match._id,
-      tournament: match.tournament,
-      homeTeam: match.homeTeam,
-      awayTeam: match.awayTeam,
-      matchDate: match.matchDate,
-      matchTime: match.matchTime,
-      venue: match.venue,
-      stage: match.stage,
-      homeTeamScore: match.homeTeamScore,
-      awayTeamScore: match.awayTeamScore,
-      status: match.status,
-      createdAt: match.createdAt,
-      updatedAt: match.updatedAt,
+      id: updatedMatch._id,
+      tournament: updatedMatch.tournament,
+      homeTeam: updatedMatch.homeTeam,
+      awayTeam: updatedMatch.awayTeam,
+      matchDate: updatedMatch.matchDate,
+      matchTime: updatedMatch.matchTime,
+      venue: updatedMatch.venue,
+      stage: updatedMatch.stage,
+      homeTeamScore: updatedMatch.homeTeamScore,
+      awayTeamScore: updatedMatch.awayTeamScore,
+      status: updatedMatch.status,
+      createdAt: updatedMatch.createdAt,
+      updatedAt: updatedMatch.updatedAt,
     };
   }
 
   // Delete a match
-  async deleteMatch(id) {
-    const match = await Match.findByIdAndDelete(id);
+  async deleteMatch(id, userId) {
+    const match = await Match.findById(id).populate("tournament");
     if (!match) {
       throw new Error("Partido no encontrado");
     }
+
+    // Verify ownership: user must be the tournament creator
+    if (match.tournament.createdBy.toString() !== userId) {
+      throw new Error("No tienes permiso para realizar esta acción");
+    }
+
+    await Match.findByIdAndDelete(id);
     return { message: "Partido eliminado exitosamente" };
   }
 }

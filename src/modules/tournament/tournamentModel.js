@@ -91,4 +91,8 @@ const tournamentSchema = new mongoose.Schema(
   }
 );
 
+// Indexes for query optimization
+// Index: Fast lookup of tournaments by creator (used in getTournamentsByUser)
+tournamentSchema.index({ createdBy: 1 });
+
 export default mongoose.model("Tournament", tournamentSchema);

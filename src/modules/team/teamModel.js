@@ -28,4 +28,8 @@ const teamSchema = new mongoose.Schema(
   }
 );
 
+// Indexes for query optimization
+// Index: Fast lookup of teams by tournament (used in getTeamsByTournament)
+teamSchema.index({ tournament: 1 });
+
 export default mongoose.model("Team", teamSchema);

@@ -54,10 +54,14 @@ export const updateTournament = async (req, res) => {
 
     const tournament = await tournamentService.updateTournament(
       req.params.id,
-      tournamentData
+      tournamentData,
+      req.user.id
     );
     res.status(200).json({ tournament });
   } catch (err) {
+    if (err.message === "No tienes permiso para realizar esta acción") {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(400).json({ message: err.message });
   }
 };
@@ -65,9 +69,15 @@ export const updateTournament = async (req, res) => {
 // Delete a tournament
 export const deleteTournament = async (req, res) => {
   try {
-    const result = await tournamentService.deleteTournament(req.params.id);
+    const result = await tournamentService.deleteTournament(
+      req.params.id,
+      req.user.id
+    );
     res.status(200).json(result);
   } catch (err) {
+    if (err.message === "No tienes permiso para realizar esta acción") {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(404).json({ message: err.message });
   }
 };

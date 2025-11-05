@@ -71,9 +71,16 @@ export const updateTeam = async (req, res) => {
       teamData.teamLogo = `/uploads/teams/${req.file.filename}`;
     }
 
-    const team = await teamService.updateTeam(req.params.id, teamData);
+    const team = await teamService.updateTeam(
+      req.params.id,
+      teamData,
+      req.user.id
+    );
     res.status(200).json({ team });
   } catch (err) {
+    if (err.message === "No tienes permiso para realizar esta acción") {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(400).json({ message: err.message });
   }
 };
@@ -81,9 +88,12 @@ export const updateTeam = async (req, res) => {
 // Delete a team
 export const deleteTeam = async (req, res) => {
   try {
-    const result = await teamService.deleteTeam(req.params.id);
+    const result = await teamService.deleteTeam(req.params.id, req.user.id);
     res.status(200).json(result);
   } catch (err) {
+    if (err.message === "No tienes permiso para realizar esta acción") {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(404).json({ message: err.message });
   }
 };

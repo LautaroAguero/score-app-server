@@ -10,6 +10,11 @@ import {
 } from "./tournamentController.js";
 import { auth } from "../../middlewares/authentication.js";
 import { upload } from "../../config/upload.js";
+import { validateRequest } from "../../core/validation/validateRequest.js";
+import {
+  tournamentCreateSchema,
+  tournamentUpdateSchema,
+} from "../../core/validation/schemas.js";
 
 const router = express.Router();
 
@@ -17,11 +22,23 @@ const router = express.Router();
 router.get("/", getAllTournaments); // Public - get all tournaments
 
 // Protected routes (authentication required)
-router.post("/", auth, upload.single("tournamentBanner"), createTournament);
+router.post(
+  "/",
+  auth,
+  validateRequest(tournamentCreateSchema),
+  upload.single("tournamentBanner"),
+  createTournament
+);
 router.get("/my-tournaments", auth, getMyTournaments);
 router.get("/:id/standings", getTournamentStandings); // Public - get tournament standings
 router.get("/:id", getTournamentById); // Public - get single tournament
-router.put("/:id", auth, upload.single("tournamentBanner"), updateTournament);
+router.put(
+  "/:id",
+  auth,
+  validateRequest(tournamentUpdateSchema),
+  upload.single("tournamentBanner"),
+  updateTournament
+);
 router.delete("/:id", auth, deleteTournament);
 
 export default router;

@@ -5,7 +5,6 @@ const matchService = new MatchService();
 // Create a new match
 export const createMatch = async (req, res) => {
   try {
-    console.log("Received match data:", req.body); // Debug log
     const match = await matchService.createMatch(req.body);
     res.status(201).json({ match });
   } catch (err) {
@@ -58,9 +57,16 @@ export const getMatchById = async (req, res) => {
 // Update a match
 export const updateMatch = async (req, res) => {
   try {
-    const match = await matchService.updateMatch(req.params.id, req.body);
+    const match = await matchService.updateMatch(
+      req.params.id,
+      req.body,
+      req.user.id
+    );
     res.status(200).json({ match });
   } catch (err) {
+    if (err.message === "No tienes permiso para realizar esta acción") {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(400).json({ message: err.message });
   }
 };
@@ -68,9 +74,12 @@ export const updateMatch = async (req, res) => {
 // Delete a match
 export const deleteMatch = async (req, res) => {
   try {
-    const result = await matchService.deleteMatch(req.params.id);
+    const result = await matchService.deleteMatch(req.params.id, req.user.id);
     res.status(200).json(result);
   } catch (err) {
+    if (err.message === "No tienes permiso para realizar esta acción") {
+      return res.status(403).json({ message: err.message });
+    }
     res.status(404).json({ message: err.message });
   }
 };

@@ -8,6 +8,11 @@ import {
   deleteMatch,
 } from "./matchController.js";
 import { auth } from "../../middlewares/authentication.js";
+import { validateRequest } from "../../core/validation/validateRequest.js";
+import {
+  matchCreateSchema,
+  matchUpdateSchema,
+} from "../../core/validation/schemas.js";
 
 const router = express.Router();
 
@@ -18,8 +23,8 @@ router.get("/tournament/:tournamentId", getMatchesByTournament); // Public - get
 router.get("/:id", getMatchById); // Public - get single match (must be AFTER /tournament/:tournamentId)
 
 // Protected routes (authentication required)
-router.post("/", auth, createMatch);
-router.put("/:id", auth, updateMatch);
+router.post("/", auth, validateRequest(matchCreateSchema), createMatch);
+router.put("/:id", auth, validateRequest(matchUpdateSchema), updateMatch);
 router.delete("/:id", auth, deleteMatch);
 
 export default router;
