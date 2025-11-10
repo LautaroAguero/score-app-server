@@ -164,12 +164,10 @@ export const matchCreateSchema = Joi.object({
     .messages({
       "any.only": "El estado debe ser: scheduled, playing o completed",
     }),
-  matchDate: Joi.string()
-    .optional()
-    .isoDate()
-    .messages({
-      "string.isoDate": "La fecha debe estar en formato ISO 8601 (ej: 2025-11-11T03:00:00Z)",
-    }),
+  matchDate: Joi.string().optional().isoDate().messages({
+    "string.isoDate":
+      "La fecha debe estar en formato ISO 8601 (ej: 2025-11-11T03:00:00Z)",
+  }),
   matchTime: Joi.string()
     .optional()
     .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
@@ -187,12 +185,10 @@ export const matchUpdateSchema = Joi.object({
     .messages({
       "any.only": "El estado debe ser: scheduled, playing o completed",
     }),
-  matchDate: Joi.string()
-    .optional()
-    .isoDate()
-    .messages({
-      "string.isoDate": "La fecha debe estar en formato ISO 8601 (ej: 2025-11-11T03:00:00Z)",
-    }),
+  matchDate: Joi.string().optional().isoDate().messages({
+    "string.isoDate":
+      "La fecha debe estar en formato ISO 8601 (ej: 2025-11-11T03:00:00Z)",
+  }),
   matchTime: Joi.string()
     .optional()
     .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
@@ -230,7 +226,8 @@ export const playerCreateSchema = Joi.object({
       return value;
     })
     .messages({
-      "string.isoDate": "La fecha debe estar en formato ISO 8601 (ej: 1987-06-24)",
+      "string.isoDate":
+        "La fecha debe estar en formato ISO 8601 (ej: 1987-06-24)",
       "any.invalid": "La fecha de nacimiento no puede ser en el futuro",
     }),
   nationality: Joi.string().max(50).optional().trim(),
@@ -258,7 +255,8 @@ export const playerUpdateSchema = Joi.object({
       return value;
     })
     .messages({
-      "string.isoDate": "La fecha debe estar en formato ISO 8601 (ej: 1987-06-24)",
+      "string.isoDate":
+        "La fecha debe estar en formato ISO 8601 (ej: 1987-06-24)",
       "any.invalid": "La fecha de nacimiento no puede ser en el futuro",
     }),
   nationality: Joi.string().max(50).optional().trim(),
