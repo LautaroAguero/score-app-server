@@ -181,4 +181,81 @@ export class MatchService {
     await Match.findByIdAndDelete(id);
     return { message: "Partido eliminado exitosamente" };
   }
+
+  // Bulk schedule multiple matches
+  async bulkScheduleMatches(updates, userId) {
+    if (!updates || updates.length === 0) {
+      throw new Error("Debe proporcionar al menos 1 match para agendar");
+    }
+
+    // 1. Get all matches to validate ownership
+    const matchIds = updates.map((u) => u.matchId);
+    const matches = await Match.find({ _id: { $in: matchIds } }).populate(
+      "tournament"
+    );
+
+    if (matches.length !== matchIds.length) {
+      throw new Error("Uno o más matches no existen");
+    }
+
+    // 2. Validate all matches belong to tournaments owned by the user
+    const userTournaments = new Set();
+    for (const match of matches) {
+      if (match.tournament.createdBy.toString() !== userId) {
+        throw new Error(
+          "No tienes permiso para agendar matches de este torneo"
+        );
+      }
+      userTournaments.add(match.tournament._id.toString());
+    }
+
+    // 3. Validate dates are in the future
+    const now = new Date();
+    const updatedMatches = [];
+
+    for (const update of updates) {
+      // Find the match object
+      const match = matches.find((m) => m._id.toString() === update.matchId);
+      if (!match) {
+        throw new Error(`Match con ID ${update.matchId} no encontrado`);
+      }
+
+      // Parse date and time
+      const matchDateTime = new Date(`${update.matchDate}T${update.matchTime}:00`);
+
+      // Validate date is in the future
+      if (matchDateTime <= now) {
+        throw new Error(
+          `La fecha y hora del match ${match._id} no puede ser en el pasado`
+        );
+      }
+
+      // Update the match
+      match.matchDate = update.matchDate;
+      match.matchTime = update.matchTime;
+
+      updatedMatches.push(match);
+    }
+
+    // 4. Save all updated matches
+    const savedMatches = [];
+    for (const match of updatedMatches) {
+      await match.save();
+      savedMatches.push({
+        id: match._id,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        matchDate: match.matchDate,
+        matchTime: match.matchTime,
+        status: match.status,
+      });
+    }
+
+    // 5. Return results
+    return {
+      success: true,
+      matchesUpdated: savedMatches.length,
+      matches: savedMatches,
+    };
+  }
 }

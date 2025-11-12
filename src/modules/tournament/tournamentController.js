@@ -105,3 +105,80 @@ export const getTournamentStandings = async (req, res) => {
     res.status(404).json({ message: err.message });
   }
 };
+
+// Add multiple teams to a tournament
+export const addTeamsToTournament = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { teamIds } = req.body;
+    const userId = req.user.id;
+
+    const tournament = await tournamentService.addTeamsToTournament(
+      id,
+      teamIds,
+      userId
+    );
+
+    res.status(200).json({
+      success: true,
+      teamsAdded: teamIds.length,
+      tournament,
+    });
+  } catch (err) {
+    if (err.message.includes("Torneo no encontrado")) {
+      res.status(404).json({ message: err.message });
+    } else if (err.message.includes("No tienes permiso")) {
+      res.status(403).json({ message: err.message });
+    } else {
+      res.status(400).json({ message: err.message });
+    }
+  }
+};
+
+// Auto-generate matches for a tournament
+export const autoGenerateMatches = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { format, twoLegs } = req.body;
+    const userId = req.user.id;
+
+    const result = await tournamentService.autoGenerateMatches(
+      id,
+      format,
+      userId,
+      twoLegs
+    );
+
+    res.status(201).json(result);
+  } catch (err) {
+    if (err.message.includes("Torneo no encontrado")) {
+      res.status(404).json({ message: err.message });
+    } else if (err.message.includes("No tienes permiso")) {
+      res.status(403).json({ message: err.message });
+    } else if (
+      err.message.includes("debe estar en estado") ||
+      err.message.includes("requiere") ||
+      err.message.includes("Formato inválido")
+    ) {
+      res.status(400).json({ message: err.message });
+    } else {
+      res.status(400).json({ message: err.message });
+    }
+  }
+};
+
+// Get tournament setup status
+export const getSetupStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const setupStatus = await tournamentService.getSetupStatus(id);
+    res.status(200).json(setupStatus);
+  } catch (err) {
+    if (err.message.includes("Torneo no encontrado")) {
+      res.status(404).json({ message: err.message });
+    } else {
+      res.status(500).json({ message: err.message });
+    }
+  }
+};

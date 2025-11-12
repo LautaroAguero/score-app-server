@@ -83,3 +83,29 @@ export const deleteMatch = async (req, res) => {
     res.status(404).json({ message: err.message });
   }
 };
+
+// Bulk schedule multiple matches
+export const bulkScheduleMatches = async (req, res) => {
+  try {
+    const { updates } = req.body;
+    const userId = req.user.id;
+
+    const result = await matchService.bulkScheduleMatches(updates, userId);
+    res.status(200).json(result);
+  } catch (err) {
+    if (
+      err.message.includes("No tienes permiso") ||
+      err.message.includes("No existen")
+    ) {
+      return res.status(403).json({ message: err.message });
+    } else if (err.message.includes("no encontrado")) {
+      return res.status(404).json({ message: err.message });
+    } else if (
+      err.message.includes("pasado") ||
+      err.message.includes("Debe proporcionar")
+    ) {
+      return res.status(400).json({ message: err.message });
+    }
+    res.status(400).json({ message: err.message });
+  }
+};

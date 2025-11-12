@@ -6,12 +6,14 @@ import {
   getMatchById,
   updateMatch,
   deleteMatch,
+  bulkScheduleMatches,
 } from "./matchController.js";
 import { auth } from "../../middlewares/authentication.js";
 import { validateRequest } from "../../core/validation/validateRequest.js";
 import {
   matchCreateSchema,
   matchUpdateSchema,
+  bulkScheduleMatchesSchema,
 } from "../../core/validation/schemas.js";
 
 const router = express.Router();
@@ -25,6 +27,12 @@ router.get("/:id", getMatchById); // Public - get single match (must be AFTER /t
 // Protected routes (authentication required)
 router.post("/", auth, validateRequest(matchCreateSchema), createMatch);
 router.put("/:id", auth, validateRequest(matchUpdateSchema), updateMatch);
+router.patch(
+  "/bulk-schedule",
+  auth,
+  validateRequest(bulkScheduleMatchesSchema),
+  bulkScheduleMatches
+);
 router.delete("/:id", auth, deleteMatch);
 
 export default router;

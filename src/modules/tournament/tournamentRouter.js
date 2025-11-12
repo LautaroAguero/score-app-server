@@ -7,6 +7,9 @@ import {
   deleteTournament,
   getMyTournaments,
   getTournamentStandings,
+  addTeamsToTournament,
+  autoGenerateMatches,
+  getSetupStatus,
 } from "./tournamentController.js";
 import { auth } from "../../middlewares/authentication.js";
 import { upload } from "../../config/upload.js";
@@ -14,6 +17,8 @@ import { validateRequest } from "../../core/validation/validateRequest.js";
 import {
   tournamentCreateSchema,
   tournamentUpdateSchema,
+  addTeamsSchema,
+  autoGenerateMatchesSchema,
 } from "../../core/validation/schemas.js";
 
 const router = express.Router();
@@ -39,6 +44,19 @@ router.put(
   upload.single("tournamentBanner"),
   updateTournament
 );
+router.post(
+  "/:id/add-teams",
+  auth,
+  validateRequest(addTeamsSchema),
+  addTeamsToTournament
+);
+router.post(
+  "/:id/auto-generate-matches",
+  auth,
+  validateRequest(autoGenerateMatchesSchema),
+  autoGenerateMatches
+);
+router.get("/:id/setup-status", getSetupStatus); // Public - get tournament setup status
 router.delete("/:id", auth, deleteTournament);
 
 export default router;

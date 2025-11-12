@@ -110,6 +110,40 @@ export const tournamentUpdateSchema = Joi.object({
   pointsForLoss: Joi.number().integer().min(0).optional(),
 }).strict();
 
+// ============ ADD TEAMS TO TOURNAMENT SCHEMA ============
+export const addTeamsSchema = Joi.object({
+  teamIds: Joi.array()
+    .items(
+      Joi.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
+        .messages({
+          "string.pattern.base": "Cada ID de equipo debe ser un ObjectId válido",
+        })
+    )
+    .min(1)
+    .max(32)
+    .required()
+    .messages({
+      "array.min": "Debe proporcionar al menos 1 equipo",
+      "array.max": "No puede agregar más de 32 equipos",
+      "any.required": "El campo teamIds es requerido",
+    }),
+}).strict();
+
+// ============ AUTO-GENERATE MATCHES SCHEMA ============
+export const autoGenerateMatchesSchema = Joi.object({
+  format: Joi.string()
+    .required()
+    .valid("league", "knockout", "hybrid")
+    .messages({
+      "any.only": "El formato debe ser 'league', 'knockout' o 'hybrid'",
+      "any.required": "El campo format es requerido",
+    }),
+  twoLegs: Joi.boolean().optional().default(false).messages({
+    "boolean.base": "El campo twoLegs debe ser un booleano",
+  }),
+}).strict();
+
 // ============ TEAM SCHEMAS ============
 export const teamCreateSchema = Joi.object({
   name: Joi.string().required().min(2).max(100).trim().messages({
@@ -194,6 +228,40 @@ export const matchUpdateSchema = Joi.object({
     .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
     .messages({
       "string.pattern.base": "La hora debe estar en formato HH:MM",
+    }),
+}).strict();
+
+// ============ BULK SCHEDULE MATCHES SCHEMA ============
+export const bulkScheduleMatchesSchema = Joi.object({
+  updates: Joi.array()
+    .items(
+      Joi.object({
+        matchId: Joi.string()
+          .required()
+          .regex(/^[0-9a-fA-F]{24}$/)
+          .messages({
+            "string.pattern.base": "El matchId debe ser un ObjectId válido",
+            "any.required": "El campo matchId es requerido",
+          }),
+        matchDate: Joi.string().required().isoDate().messages({
+          "string.isoDate":
+            "La fecha debe estar en formato ISO 8601 (ej: 2025-11-11T03:00:00Z)",
+          "any.required": "El campo matchDate es requerido",
+        }),
+        matchTime: Joi.string()
+          .required()
+          .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+          .messages({
+            "string.pattern.base": "La hora debe estar en formato HH:MM",
+            "any.required": "El campo matchTime es requerido",
+          }),
+      }).strict()
+    )
+    .min(1)
+    .required()
+    .messages({
+      "array.min": "Debe proporcionar al menos 1 match para agendar",
+      "any.required": "El campo updates es requerido",
     }),
 }).strict();
 

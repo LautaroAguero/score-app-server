@@ -82,8 +82,8 @@ const tournamentSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["upcoming", "inprogress", "finished"],
-      default: "upcoming",
+      enum: ["setup", "inprogress", "finished"],
+      default: "setup",
     },
   },
   {
