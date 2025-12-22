@@ -221,7 +221,9 @@ export class MatchService {
       }
 
       // Parse date and time
-      const matchDateTime = new Date(`${update.matchDate}T${update.matchTime}:00`);
+      const matchDateTime = new Date(
+        `${update.matchDate}T${update.matchTime}:00`
+      );
 
       // Validate date is in the future
       if (matchDateTime <= now) {

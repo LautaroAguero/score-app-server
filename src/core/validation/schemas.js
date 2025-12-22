@@ -117,7 +117,8 @@ export const addTeamsSchema = Joi.object({
       Joi.string()
         .regex(/^[0-9a-fA-F]{24}$/)
         .messages({
-          "string.pattern.base": "Cada ID de equipo debe ser un ObjectId válido",
+          "string.pattern.base":
+            "Cada ID de equipo debe ser un ObjectId válido",
         })
     )
     .min(1)

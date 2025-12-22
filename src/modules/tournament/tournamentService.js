@@ -379,9 +379,10 @@ export class TournamentService {
 
   // Helper: Calculate jornada (round/matchday) number
   _calculateJornada(matchIndex, numTeams, twoLegs) {
-    const matchesPerJornada = numTeams % 2 === 0 ? numTeams / 2 : (numTeams - 1) / 2;
+    const matchesPerJornada =
+      numTeams % 2 === 0 ? numTeams / 2 : (numTeams - 1) / 2;
     const totalJornadas = twoLegs ? (numTeams - 1) * 2 : numTeams - 1;
-    
+
     // Find which jornada this match belongs to
     for (let jornada = 1; jornada <= totalJornadas; jornada++) {
       const startIdx = (jornada - 1) * matchesPerJornada;
@@ -459,12 +460,14 @@ export class TournamentService {
       rounds.push(matches);
 
       // Next round will have winners only (placeholder structure)
-      currentRound = currentRound.map((_, i) => {
-        if (i % 2 === 0) {
-          return `winner_match_${rounds.length - 1}_${Math.floor(i / 2)}`;
-        }
-        return null;
-      }).filter(Boolean);
+      currentRound = currentRound
+        .map((_, i) => {
+          if (i % 2 === 0) {
+            return `winner_match_${rounds.length - 1}_${Math.floor(i / 2)}`;
+          }
+          return null;
+        })
+        .filter(Boolean);
     }
 
     return rounds;
@@ -545,8 +548,9 @@ export class TournamentService {
 
       if (isPowerOfTwo(teamsToKnockout)) {
         // Generate knockout structure with placeholder teams
-        const knockoutTeams = Array.from({ length: teamsToKnockout }, (_, i) =>
-          `qualified_team_${i}`
+        const knockoutTeams = Array.from(
+          { length: teamsToKnockout },
+          (_, i) => `qualified_team_${i}`
         );
 
         const knockoutRounds = this._generateKnockoutRounds(knockoutTeams);
@@ -730,7 +734,7 @@ export class TournamentService {
     // 3. Get matches count and details
     const allMatches = await Match.find({ tournament: tournamentId });
     const matchesCount = allMatches.length;
-    
+
     // Count matches with scheduling (dates)
     const scheduledMatches = allMatches.filter(
       (match) => match.matchDate && match.matchTime
@@ -770,7 +774,8 @@ export class TournamentService {
       step3_matches_count: matchesCount,
       step4_matches_scheduled: scheduledMatches > 0,
       step4_matches_scheduled_count: scheduledMatches,
-      step4_matches_fully_scheduled: scheduledMatches === matchesCount && matchesCount > 0,
+      step4_matches_fully_scheduled:
+        scheduledMatches === matchesCount && matchesCount > 0,
     };
 
     // 7. Return status object
@@ -785,7 +790,8 @@ export class TournamentService {
       summary: {
         teamsReady: teamsCount >= 2,
         matchesGenerated: matchesCount > 0,
-        matchesFullyScheduled: scheduledMatches === matchesCount && matchesCount > 0,
+        matchesFullyScheduled:
+          scheduledMatches === matchesCount && matchesCount > 0,
       },
     };
   }
