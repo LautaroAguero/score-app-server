@@ -133,6 +133,126 @@ No test framework currently configured. Manual testing via Postman/similar tools
 ## Current Modules
 
 - **User**: Authentication (login/register), JWT tokens
-- **Tournament**: Full CRUD, user-owned, supports banner uploads, status tracking
+- **Tournament**: Full CRUD, user-owned, supports banner uploads, status tracking, registration management
 - **Team**: Full CRUD, tournament-scoped, supports logo uploads, optional grouping
 - **Match**: Full CRUD, tournament-scoped, validates teams belong to same tournament, status tracking (scheduled/playing/completed), score tracking
+- **Player**: Player profiles, team assignments, statistics
+- **Registration**: Team registration flow for tournaments with approval system
+
+## Registration Module (NEW)
+
+### Purpose
+Manages the team registration flow to tournaments. Allows:
+- Teams to register to tournaments with optional approval
+- Tournament creators to approve/reject registrations
+- Tracking of registration period and team capacity limits
+
+### Model Fields
+```javascript
+{
+  tournament: ObjectId (ref: Tournament),     // Tournament being registered for
+  team: ObjectId (ref: Team),                 // Team being registered
+  user: ObjectId (ref: User),                 // User (team owner) registering
+  status: "pending" | "approved" | "rejected", // Registration status
+  appliedAt: Date,                            // When application submitted
+  approvedAt: Date,                           // When approved/rejected
+  approvedBy: ObjectId (ref: User),           // Who approved/rejected (tournament creator)
+  rejectionReason: String,                    // Optional reason for rejection
+  timestamps: true
+}
+```
+
+### Tournament Extended Fields
+```javascript
+{
+  registrationStartDate: Date,    // When registration period opens
+  registrationEndDate: Date,      // When registration period closes
+  maxTeams: Number,               // Max allowed teams (optional)
+  requiresApproval: Boolean       // If true, registrations need manual approval (default: false)
+}
+```
+
+### Service Methods
+1. **registerTeam(tournamentId, teamId, userId)** - Register team to tournament
+   - Validates registration period
+   - Checks team capacity
+   - Prevents duplicates
+   - Auto-approves if `requiresApproval=false`
+
+2. **getRegistrationsByTournament(tournamentId, status)** - List registrations for tournament
+   - Optional status filter: "pending", "approved", "rejected"
+
+3. **getMyRegistrations(userId)** - List all registrations by user
+
+4. **getRegistrationById(id)** - Get single registration details
+
+5. **approveRegistration(registrationId, userId)** - Approve registration
+   - Only tournament creator can approve
+   - Checks max team capacity before approving
+
+6. **rejectRegistration(registrationId, userId, reason)** - Reject registration
+   - Only tournament creator can reject
+   - Optional rejection reason
+
+7. **cancelRegistration(registrationId, userId)** - Cancel registration
+   - Only the registering user can cancel
+   - Cannot cancel rejected registrations
+
+8. **getTournamentRegistrationStats(tournamentId, userId)** - Get registration statistics
+   - Only tournament creator can view
+   - Returns: total, approved, pending, rejected counts
+
+### API Routes
+```
+POST   /api/v1/registrations                          # Register team
+GET    /api/v1/registrations/my-registrations         # My registrations
+GET    /api/v1/registrations/tournament/:id           # Registrations for tournament
+GET    /api/v1/registrations/tournament/:id/stats     # Registration stats (creator only)
+GET    /api/v1/registrations/:id                      # Get single registration
+PATCH  /api/v1/registrations/:id/approve              # Approve (creator only)
+PATCH  /api/v1/registrations/:id/reject               # Reject (creator only)
+DELETE /api/v1/registrations/:id                      # Cancel registration
+```
+
+### Validation Rules
+- Tournament must exist
+- Team must exist and belong to the tournament
+- No duplicate registrations of same team in same tournament
+- Registration period must be open (if dates are set)
+- Tournament must not exceed max teams capacity
+- Only tournament creator can approve/reject
+- Only registering user can cancel their own registration
+
+### Usage Flow
+```javascript
+// 1. Tournament creator sets registration config (PATCH /tournaments/:id)
+{
+  registrationStartDate: "2026-01-10T00:00:00Z",
+  registrationEndDate: "2026-01-20T23:59:59Z",
+  maxTeams: 16,
+  requiresApproval: true  // Manual approval needed
+}
+
+// 2. Team owner registers (POST /registrations)
+{
+  tournament: "tournament_id",
+  team: "team_id"
+}
+// Response: { registration: { status: "pending", ... } }
+
+// 3. Tournament creator views pending registrations
+// GET /registrations/tournament/:tournamentId?status=pending
+
+// 4. Tournament creator approves/rejects
+// PATCH /registrations/:id/approve
+// PATCH /registrations/:id/reject { rejectionReason: "..." }
+
+// 5. After approval, team can play matches in tournament
+```
+
+### Common Gotchas
+- **Auto-approval**: If `requiresApproval=false`, registrations are auto-approved
+- **Period Validation**: Dates are optional; if not set, registration always allowed
+- **Max Teams**: Only counts "approved" registrations against limit
+- **Deletion**: Registrations are permanently deleted (no soft delete)
+- **Index Uniqueness**: tournament+team combo must be unique per registration

@@ -10,6 +10,11 @@ const teamSchema = new mongoose.Schema(
     tournament: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Tournament",
+      required: false,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     group: {
@@ -31,5 +36,9 @@ const teamSchema = new mongoose.Schema(
 // Indexes for query optimization
 // Index: Fast lookup of teams by tournament (used in getTeamsByTournament)
 teamSchema.index({ tournament: 1 });
+// Index: Fast lookup of teams by creator
+teamSchema.index({ createdBy: 1 });
+// Index: Fast lookup of teams by tournament and creator
+teamSchema.index({ tournament: 1, createdBy: 1 });
 
 export default mongoose.model("Team", teamSchema);

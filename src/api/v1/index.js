@@ -4,6 +4,7 @@ import tournamentRouter from "../../modules/tournament/tournamentRouter.js";
 import teamRouter from "../../modules/team/teamRouter.js";
 import matchRouter from "../../modules/match/matchRouter.js";
 import playerRouter from "../../modules/player/playerRouter.js";
+import registrationRouter from "../../modules/registration/registrationRouter.js";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/tournaments", tournamentRouter);
 router.use("/teams", teamRouter);
 router.use("/matches", matchRouter);
 router.use("/players", playerRouter);
+router.use("/registrations", registrationRouter);
 
 export default router;

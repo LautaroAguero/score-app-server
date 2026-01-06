@@ -1,4 +1,6 @@
 import { TeamService } from "./teamService.js";
+import Registration from "../registration/registrationModel.js";
+import Tournament from "../tournament/tournamentModel.js";
 
 const teamService = new TeamService();
 
@@ -7,13 +9,55 @@ export const createTeam = async (req, res) => {
   try {
     const teamData = { ...req.body };
 
+    // Extract tournament if provided (will create registration instead)
+    const tournamentId = teamData.tournament;
+    delete teamData.tournament; // Remove from team data
+
+    // Add the logged user ID as the creator
+    teamData.createdBy = req.user.id;
+
     // If a file was uploaded, add the file path to teamData
     if (req.file) {
       teamData.teamLogo = `/uploads/teams/${req.file.filename}`;
     }
 
     const team = await teamService.createTeam(teamData);
-    res.status(201).json({ team });
+
+    // If tournament was provided, create a registration instead of associating team directly
+    let registration = null;
+    if (tournamentId) {
+      // Validate tournament exists
+      const tournament = await Tournament.findById(tournamentId);
+      if (!tournament) {
+        return res.status(400).json({ message: "Torneo no encontrado" });
+      }
+
+      // Create registration with status "pending"
+      registration = new Registration({
+        tournament: tournamentId,
+        team: team.id,
+        user: req.user.id,
+        status: "pending",
+        appliedAt: new Date(),
+      });
+
+      await registration.save();
+
+      // Populate registration data
+      await registration.populate([
+        { path: "tournament", select: "name sportType" },
+        { path: "team", select: "name teamLogo" },
+        { path: "user", select: "name email" },
+      ]);
+    }
+
+    res.status(201).json({
+      team,
+      registration: registration || null,
+      message: registration
+        ? "Equipo creado e inscripción a torneo creada con estado pending"
+        : "Equipo creado exitosamente",
+    });
   } catch (err) {
     console.error("Error creating team:", err);
     res.status(400).json({ message: err.message });
@@ -33,6 +77,17 @@ export const getAllTeams = async (req, res) => {
 
     // Otherwise get all teams
     const teams = await teamService.getAllTeams();
+    res.status(200).json({ teams });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get my teams (teams created by the logged user - for captains)
+export const getMyTeams = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const teams = await teamService.getMyTeams(userId);
     res.status(200).json({ teams });
   } catch (err) {
     res.status(500).json({ message: err.message });

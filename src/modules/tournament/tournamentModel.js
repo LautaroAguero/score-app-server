@@ -85,6 +85,23 @@ const tournamentSchema = new mongoose.Schema(
       enum: ["setup", "inprogress", "finished"],
       default: "setup",
     },
+    registrationStartDate: {
+      type: Date,
+      required: false,
+    },
+    registrationEndDate: {
+      type: Date,
+      required: false,
+    },
+    maxTeams: {
+      type: Number,
+      required: false,
+      min: 2,
+    },
+    requiresApproval: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

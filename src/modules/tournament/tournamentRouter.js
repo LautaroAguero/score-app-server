@@ -12,6 +12,7 @@ import {
   getSetupStatus,
 } from "./tournamentController.js";
 import { auth } from "../../middlewares/authentication.js";
+import { authorize } from "../../middlewares/authorization.js";
 import { upload } from "../../config/upload.js";
 import { validateRequest } from "../../core/validation/validateRequest.js";
 import {
@@ -30,6 +31,7 @@ router.get("/", getAllTournaments); // Public - get all tournaments
 router.post(
   "/",
   auth,
+  authorize("organizer", "admin"),
   validateRequest(tournamentCreateSchema),
   upload.single("tournamentBanner"),
   createTournament
@@ -40,6 +42,7 @@ router.get("/:id", getTournamentById); // Public - get single tournament
 router.put(
   "/:id",
   auth,
+  authorize("organizer", "admin"),
   validateRequest(tournamentUpdateSchema),
   upload.single("tournamentBanner"),
   updateTournament
@@ -47,16 +50,18 @@ router.put(
 router.post(
   "/:id/add-teams",
   auth,
+  authorize("organizer", "admin"),
   validateRequest(addTeamsSchema),
   addTeamsToTournament
 );
 router.post(
   "/:id/auto-generate-matches",
   auth,
+  authorize("organizer", "admin"),
   validateRequest(autoGenerateMatchesSchema),
   autoGenerateMatches
 );
 router.get("/:id/setup-status", getSetupStatus); // Public - get tournament setup status
-router.delete("/:id", auth, deleteTournament);
+router.delete("/:id", auth, authorize("organizer", "admin"), deleteTournament);
 
 export default router;

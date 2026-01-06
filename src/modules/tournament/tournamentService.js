@@ -1,6 +1,7 @@
 import Tournament from "./tournamentModel.js";
 import Team from "../team/teamModel.js";
 import Match from "../match/matchModel.js";
+import Registration from "../registration/registrationModel.js";
 
 export class TournamentService {
   // Create a new tournament
@@ -38,21 +39,42 @@ export class TournamentService {
     return tournaments;
   }
 
-  // Get tournaments created by a specific user
+  // Get tournaments created by a specific user (with teams)
   async getTournamentsByUser(userId) {
     const tournaments = await Tournament.find({ createdBy: userId })
       .sort({ createdAt: -1 })
       .populate("createdBy", "name email");
-    return tournaments;
+
+    // Add teams to each tournament
+    const tournamentsWithTeams = await Promise.all(
+      tournaments.map(async (tournament) => {
+        const teams = await Team.find({ tournament: tournament._id }).sort({ name: 1 });
+        return {
+          ...tournament.toObject(),
+          teams,
+        };
+      })
+    );
+
+    return tournamentsWithTeams;
   }
 
-  // Get a single tournament by ID
+  // Get a single tournament by ID (with approved teams)
   async getTournamentById(id) {
-    const tournament = await Tournament.findById(id);
+    const tournament = await Tournament.findById(id).populate("createdBy", "name email");
     if (!tournament) {
       throw new Error("Torneo no encontrado");
     }
-    return tournament;
+
+    // Get approved teams for this tournament
+    const teams = await Team.find({
+      tournament: id,
+    }).sort({ name: 1 });
+
+    return {
+      ...tournament.toObject(),
+      teams,
+    };
   }
 
   // Update a tournament
@@ -728,10 +750,16 @@ export class TournamentService {
       throw new Error("Torneo no encontrado");
     }
 
-    // 2. Get teams count
+    // 2. Get approved registrations count (teams that are actually confirmed for the tournament)
+    const approvedRegistrationsCount = await Registration.countDocuments({
+      tournament: tournamentId,
+      status: "approved",
+    });
+
+    // 3. Get teams count (teams associated with tournament)
     const teamsCount = await Team.countDocuments({ tournament: tournamentId });
 
-    // 3. Get matches count and details
+    // 4. Get matches count and details
     const allMatches = await Match.find({ tournament: tournamentId });
     const matchesCount = allMatches.length;
 
@@ -740,13 +768,13 @@ export class TournamentService {
       (match) => match.matchDate && match.matchTime
     ).length;
 
-    // 4. Determine setup step
+    // 5. Determine setup step (use approved registrations, not just teams)
     let setupStep = 1; // Step 1: Tournament created (always true if we get here)
     let stepDescription = "Torneo creado";
 
-    if (teamsCount >= 2) {
+    if (approvedRegistrationsCount >= 2) {
       setupStep = 2;
-      stepDescription = `${teamsCount} equipos agregados`;
+      stepDescription = `${approvedRegistrationsCount} equipos aprobados`;
     }
 
     if (matchesCount > 0) {
@@ -759,17 +787,20 @@ export class TournamentService {
       stepDescription = `Todos los ${matchesCount} partidos agendados`;
     }
 
-    // 5. Calculate progress percentage
+    // 6. Calculate progress percentage
     const maxStep = 4;
     const progressPercentage = Math.round((setupStep / maxStep) * 100);
 
-    // 6. Build detailed progress object
+    // 7. Determine max teams (use tournament.maxTeams if set, otherwise 32)
+    const maxTeams = tournament.maxTeams || 32;
+
+    // 8. Build detailed progress object
     const progress = {
       step1_tournament_created: true,
-      step2_teams_added: teamsCount >= 2,
-      step2_teams_count: teamsCount,
+      step2_teams_added: approvedRegistrationsCount >= 2,
+      step2_teams_count: approvedRegistrationsCount,
       step2_teams_minimum: 2,
-      step2_teams_maximum: 32,
+      step2_teams_maximum: maxTeams,
       step3_matches_generated: matchesCount > 0,
       step3_matches_count: matchesCount,
       step4_matches_scheduled: scheduledMatches > 0,
@@ -778,7 +809,7 @@ export class TournamentService {
         scheduledMatches === matchesCount && matchesCount > 0,
     };
 
-    // 7. Return status object
+    // 9. Return status object
     return {
       tournamentId: tournament._id,
       tournamentName: tournament.name,
@@ -788,7 +819,7 @@ export class TournamentService {
       progressPercentage: progressPercentage,
       progress: progress,
       summary: {
-        teamsReady: teamsCount >= 2,
+        teamsReady: approvedRegistrationsCount >= 2,
         matchesGenerated: matchesCount > 0,
         matchesFullyScheduled:
           scheduledMatches === matchesCount && matchesCount > 0,

@@ -27,6 +27,13 @@ export const userRegisterSchema = Joi.object({
       "string.pattern.base": "El teléfono debe tener al menos 10 dígitos",
     }),
   experience: Joi.string().max(200).optional().trim(),
+  role: Joi.string()
+    .valid("user", "organizer", "admin")
+    .optional()
+    .default("user")
+    .messages({
+      "any.only": "El rol debe ser: user, organizer o admin",
+    }),
 }).strict();
 
 export const userLoginSchema = Joi.object({
@@ -154,11 +161,10 @@ export const teamCreateSchema = Joi.object({
     "any.required": "El nombre del equipo es requerido",
   }),
   tournament: Joi.string()
-    .required()
+    .optional()
     .regex(/^[0-9a-fA-F]{24}$/)
     .messages({
       "string.pattern.base": "El ID del torneo no es válido",
-      "any.required": "El torneo es requerido",
     }),
   group: Joi.string().max(50).optional().trim(),
 }).strict();
@@ -329,4 +335,28 @@ export const playerUpdateSchema = Joi.object({
       "any.invalid": "La fecha de nacimiento no puede ser en el futuro",
     }),
   nationality: Joi.string().max(50).optional().trim(),
+}).strict();
+
+// ============ REGISTRATION SCHEMAS ============
+export const registrationCreateSchema = Joi.object({
+  tournament: Joi.string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "El ID del torneo debe ser un ObjectId válido",
+      "any.required": "El ID del torneo es requerido",
+    }),
+  team: Joi.string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "El ID del equipo debe ser un ObjectId válido",
+      "any.required": "El ID del equipo es requerido",
+    }),
+}).strict();
+
+export const registrationUpdateSchema = Joi.object({
+  rejectionReason: Joi.string().max(500).optional().trim().messages({
+    "string.max": "La razón de rechazo no puede exceder 500 caracteres",
+  }),
 }).strict();
