@@ -48,7 +48,9 @@ export class TournamentService {
     // Add teams to each tournament
     const tournamentsWithTeams = await Promise.all(
       tournaments.map(async (tournament) => {
-        const teams = await Team.find({ tournament: tournament._id }).sort({ name: 1 });
+        const teams = await Team.find({ tournament: tournament._id }).sort({
+          name: 1,
+        });
         return {
           ...tournament.toObject(),
           teams,
@@ -61,7 +63,10 @@ export class TournamentService {
 
   // Get a single tournament by ID (with approved teams)
   async getTournamentById(id) {
-    const tournament = await Tournament.findById(id).populate("createdBy", "name email");
+    const tournament = await Tournament.findById(id).populate(
+      "createdBy",
+      "name email"
+    );
     if (!tournament) {
       throw new Error("Torneo no encontrado");
     }

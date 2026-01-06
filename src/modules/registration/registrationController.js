@@ -28,7 +28,10 @@ export const getRegistrationsByTournament = async (req, res) => {
     const { status } = req.query;
 
     const registrations =
-      await registrationService.getRegistrationsByTournament(tournamentId, status);
+      await registrationService.getRegistrationsByTournament(
+        tournamentId,
+        status
+      );
 
     res.status(200).json({ registrations });
   } catch (err) {
@@ -71,11 +74,17 @@ export const approveRegistration = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const registration = await registrationService.approveRegistration(id, userId);
+    const registration = await registrationService.approveRegistration(
+      id,
+      userId
+    );
 
     res.status(200).json({ registration });
   } catch (err) {
-    if (err.message === "No tienes permiso para aprobar inscripciones de este torneo") {
+    if (
+      err.message ===
+      "No tienes permiso para aprobar inscripciones de este torneo"
+    ) {
       return res.status(403).json({ message: err.message });
     }
     console.error("Error approving registration:", err);
@@ -98,7 +107,10 @@ export const rejectRegistration = async (req, res) => {
 
     res.status(200).json({ registration });
   } catch (err) {
-    if (err.message === "No tienes permiso para rechazar inscripciones de este torneo") {
+    if (
+      err.message ===
+      "No tienes permiso para rechazar inscripciones de este torneo"
+    ) {
       return res.status(403).json({ message: err.message });
     }
     console.error("Error rejecting registration:", err);
@@ -137,7 +149,10 @@ export const getTournamentRegistrationStats = async (req, res) => {
 
     res.status(200).json(stats);
   } catch (err) {
-    if (err.message === "No tienes permiso para ver las estadísticas de este torneo") {
+    if (
+      err.message ===
+      "No tienes permiso para ver las estadísticas de este torneo"
+    ) {
       return res.status(403).json({ message: err.message });
     }
     console.error("Error fetching stats:", err);
@@ -148,7 +163,8 @@ export const getTournamentRegistrationStats = async (req, res) => {
 // Get all registrations grouped by tournament (admin only)
 export const getAllRegistrationsGroupedByTournament = async (req, res) => {
   try {
-    const data = await registrationService.getAllRegistrationsGroupedByTournament();
+    const data =
+      await registrationService.getAllRegistrationsGroupedByTournament();
     res.status(200).json(data);
   } catch (err) {
     console.error("Error fetching grouped registrations:", err);
@@ -159,7 +175,8 @@ export const getAllRegistrationsGroupedByTournament = async (req, res) => {
 // Get only approved registrations grouped by tournament (for approved teams list)
 export const getApprovedRegistrationsGroupedByTournament = async (req, res) => {
   try {
-    const data = await registrationService.getApprovedRegistrationsGroupedByTournament();
+    const data =
+      await registrationService.getApprovedRegistrationsGroupedByTournament();
     res.status(200).json(data);
   } catch (err) {
     console.error("Error fetching approved registrations:", err);

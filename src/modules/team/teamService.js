@@ -78,7 +78,9 @@ export class TeamService {
     const updatedTeam = await Team.findByIdAndUpdate(id, teamData, {
       new: true,
       runValidators: true,
-    }).populate("tournament", "name sportType").populate("createdBy", "name email");
+    })
+      .populate("tournament", "name sportType")
+      .populate("createdBy", "name email");
 
     return {
       id: updatedTeam._id,

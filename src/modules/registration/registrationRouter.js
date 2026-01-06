@@ -83,6 +83,11 @@ router.patch(
 );
 
 // Cancel a registration - any authenticated user can cancel their own
-router.delete("/:id", auth, authorize("user", "organizer", "admin"), cancelRegistration);
+router.delete(
+  "/:id",
+  auth,
+  authorize("user", "organizer", "admin"),
+  cancelRegistration
+);
 
 export default router;

@@ -27,9 +27,7 @@ export class RegistrationService {
     const now = new Date();
     if (tournament.registrationStartDate && tournament.registrationEndDate) {
       if (now < tournament.registrationStartDate) {
-        throw new Error(
-          "El período de inscripción aún no ha comenzado"
-        );
+        throw new Error("El período de inscripción aún no ha comenzado");
       }
       if (now > tournament.registrationEndDate) {
         throw new Error("El período de inscripción ha finalizado");
@@ -43,7 +41,9 @@ export class RegistrationService {
         status: "approved",
       });
       if (approvedCount >= tournament.maxTeams) {
-        throw new Error("El torneo ha alcanzado el máximo de equipos permitidos");
+        throw new Error(
+          "El torneo ha alcanzado el máximo de equipos permitidos"
+        );
       }
     }
 
@@ -143,7 +143,9 @@ export class RegistrationService {
     }
 
     if (tournament.createdBy.toString() !== userId) {
-      throw new Error("No tienes permiso para aprobar inscripciones de este torneo");
+      throw new Error(
+        "No tienes permiso para aprobar inscripciones de este torneo"
+      );
     }
 
     // Check max teams limit before approval
@@ -153,7 +155,9 @@ export class RegistrationService {
         status: "approved",
       });
       if (approvedCount >= tournament.maxTeams) {
-        throw new Error("El torneo ha alcanzado el máximo de equipos permitidos");
+        throw new Error(
+          "El torneo ha alcanzado el máximo de equipos permitidos"
+        );
       }
     }
 
@@ -207,7 +211,9 @@ export class RegistrationService {
     }
 
     if (tournament.createdBy.toString() !== userId) {
-      throw new Error("No tienes permiso para rechazar inscripciones de este torneo");
+      throw new Error(
+        "No tienes permiso para rechazar inscripciones de este torneo"
+      );
     }
 
     // Update registration
@@ -279,7 +285,9 @@ export class RegistrationService {
 
     // Verify user is tournament creator
     if (tournament.createdBy.toString() !== userId) {
-      throw new Error("No tienes permiso para ver las estadísticas de este torneo");
+      throw new Error(
+        "No tienes permiso para ver las estadísticas de este torneo"
+      );
     }
 
     const total = await Registration.countDocuments({

@@ -11,7 +11,9 @@ export const authorize = (...allowedRoles) => {
 
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
-        message: `No tienes permiso. Se requieren uno de estos roles: ${allowedRoles.join(", ")}`,
+        message: `No tienes permiso. Se requieren uno de estos roles: ${allowedRoles.join(
+          ", "
+        )}`,
       });
     }
 

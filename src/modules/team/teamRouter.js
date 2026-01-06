@@ -44,6 +44,11 @@ router.put(
   upload.single("teamLogo"),
   updateTeam
 );
-router.delete("/:id", auth, authorize("user", "organizer", "admin"), deleteTeam);
+router.delete(
+  "/:id",
+  auth,
+  authorize("user", "organizer", "admin"),
+  deleteTeam
+);
 
 export default router;

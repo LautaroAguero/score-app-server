@@ -142,12 +142,15 @@ No test framework currently configured. Manual testing via Postman/similar tools
 ## Registration Module (NEW)
 
 ### Purpose
+
 Manages the team registration flow to tournaments. Allows:
+
 - Teams to register to tournaments with optional approval
 - Tournament creators to approve/reject registrations
 - Tracking of registration period and team capacity limits
 
 ### Model Fields
+
 ```javascript
 {
   tournament: ObjectId (ref: Tournament),     // Tournament being registered for
@@ -163,6 +166,7 @@ Manages the team registration flow to tournaments. Allows:
 ```
 
 ### Tournament Extended Fields
+
 ```javascript
 {
   registrationStartDate: Date,    // When registration period opens
@@ -173,13 +177,16 @@ Manages the team registration flow to tournaments. Allows:
 ```
 
 ### Service Methods
+
 1. **registerTeam(tournamentId, teamId, userId)** - Register team to tournament
+
    - Validates registration period
    - Checks team capacity
    - Prevents duplicates
    - Auto-approves if `requiresApproval=false`
 
 2. **getRegistrationsByTournament(tournamentId, status)** - List registrations for tournament
+
    - Optional status filter: "pending", "approved", "rejected"
 
 3. **getMyRegistrations(userId)** - List all registrations by user
@@ -187,14 +194,17 @@ Manages the team registration flow to tournaments. Allows:
 4. **getRegistrationById(id)** - Get single registration details
 
 5. **approveRegistration(registrationId, userId)** - Approve registration
+
    - Only tournament creator can approve
    - Checks max team capacity before approving
 
 6. **rejectRegistration(registrationId, userId, reason)** - Reject registration
+
    - Only tournament creator can reject
    - Optional rejection reason
 
 7. **cancelRegistration(registrationId, userId)** - Cancel registration
+
    - Only the registering user can cancel
    - Cannot cancel rejected registrations
 
@@ -203,6 +213,7 @@ Manages the team registration flow to tournaments. Allows:
    - Returns: total, approved, pending, rejected counts
 
 ### API Routes
+
 ```
 POST   /api/v1/registrations                          # Register team
 GET    /api/v1/registrations/my-registrations         # My registrations
@@ -215,6 +226,7 @@ DELETE /api/v1/registrations/:id                      # Cancel registration
 ```
 
 ### Validation Rules
+
 - Tournament must exist
 - Team must exist and belong to the tournament
 - No duplicate registrations of same team in same tournament
@@ -224,6 +236,7 @@ DELETE /api/v1/registrations/:id                      # Cancel registration
 - Only registering user can cancel their own registration
 
 ### Usage Flow
+
 ```javascript
 // 1. Tournament creator sets registration config (PATCH /tournaments/:id)
 {
@@ -251,6 +264,7 @@ DELETE /api/v1/registrations/:id                      # Cancel registration
 ```
 
 ### Common Gotchas
+
 - **Auto-approval**: If `requiresApproval=false`, registrations are auto-approved
 - **Period Validation**: Dates are optional; if not set, registration always allowed
 - **Max Teams**: Only counts "approved" registrations against limit
